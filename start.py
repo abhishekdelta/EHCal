@@ -18,11 +18,11 @@ except ImportError:
     flags = None
 
 # EH CONFIG
-CALENDAR_NAME = 'EventsHigh Calendar - Bangalore'
+CALENDAR_NAME = 'EventsHigh Calendar v2 - Bangalore'
 CITY_NAME = 'bangalore'
 FEATURED = False # Change to True to only populate featured events
-CATEGORIES = ['parties']
-POPULATE_DATES = ['2016-10-17', '2016-10-18', '2016-10-19', '2016-10-20', '2016-10-21']
+TAGS = [] # Optional, provide tags for filtering. Must match exactly.
+POPULATE_DATES = ['2016-10-17', '2016-10-18']
 
 # If modifying these scopes, delete your previously saved credentials
 # at ~/.credentials/calendar-python-quickstart.json
@@ -97,8 +97,8 @@ def getDateTime(date_str, time_str):
         time_str = '23:59:00'
     return datetime.strptime(date_str[:10] + '@' + time_str, '%Y-%m-%d@%H:%M:%S')
 
-def is_featured(event_json):
-    return len(filter(lambda x: x['tag'] == 'featured', event_json['tags'])) > 0
+def has_tags(event_json, tags):
+    return len(filter(lambda x: x['tag'] in tags, event_json['tags'])) > 0
 
 def main():
     credentials = get_credentials()
@@ -148,8 +148,12 @@ def main():
                 print "Skipping event %s (%s) because time is missing!" % (event['title'], event['id'])
                 continue
 
-            if FEATURED && !is_featured(event):
-                print "Skipping event %s (%s) because its not featured!" % (event['title'], event['id'])
+            if FEATURED and not has_tags(event, ['featured']):
+                #print "Skipping event %s (%s) because its not featured!" % (event['title'], event['id'])
+                continue
+
+            if TAGS and not has_tags(event, TAGS):
+                #print "Skipping event %s (%s) because it has no filtered tags!" % (event['title'], event['id'])
                 continue
 
             start_date = getDateTime(event['date'], event['start_time'] or '00:00:00')
