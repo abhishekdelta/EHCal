@@ -20,6 +20,8 @@ except ImportError:
 # EH CONFIG
 CALENDAR_NAME = 'EventsHigh Calendar - Bangalore'
 CITY_NAME = 'bangalore'
+FEATURED = False # Change to True to only populate featured events
+CATEGORIES = ['parties']
 POPULATE_DATES = ['2016-10-17', '2016-10-18', '2016-10-19', '2016-10-20', '2016-10-21']
 
 # If modifying these scopes, delete your previously saved credentials
@@ -28,16 +30,7 @@ SCOPES = 'https://www.googleapis.com/auth/calendar'
 CLIENT_SECRET_FILE = 'client_secret.json'
 APPLICATION_NAME = 'Google Calendar API Python Quickstart'
 
-
 def get_credentials():
-    """Gets valid user credentials from storage.
-
-    If nothing has been stored, or if the stored credentials are invalid,
-    the OAuth2 flow is completed to obtain the new credentials.
-
-    Returns:
-        Credentials, the obtained credential.
-    """
     home_dir = os.path.expanduser('~')
     credential_dir = os.path.join(home_dir, '.credentials')
     if not os.path.exists(credential_dir):
@@ -104,12 +97,10 @@ def getDateTime(date_str, time_str):
         time_str = '23:59:00'
     return datetime.strptime(date_str[:10] + '@' + time_str, '%Y-%m-%d@%H:%M:%S')
 
-def main():
-    """Shows basic usage of the Google Calendar API.
+def is_featured(event_json):
+    return len(filter(lambda x: x['tag'] == 'featured', event_json['tags'])) > 0
 
-    Creates a Google Calendar API service object and outputs a list of the next
-    10 events on the user's calendar.
-    """
+def main():
     credentials = get_credentials()
     http = credentials.authorize(httplib2.Http())
     service = discovery.build('calendar', 'v3', http=http)
@@ -156,7 +147,11 @@ def main():
             if not event['date']:
                 print "Skipping event %s (%s) because time is missing!" % (event['title'], event['id'])
                 continue
-                
+
+            if FEATURED && !is_featured(event):
+                print "Skipping event %s (%s) because its not featured!" % (event['title'], event['id'])
+                continue
+
             start_date = getDateTime(event['date'], event['start_time'] or '00:00:00')
             end_date = getDateTime(event['end_date'], event['end_time'] or '23:59:59')
             if start_date > end_date:
